@@ -1,0 +1,17 @@
+[
+    {
+      "id": 1,
+      "from": "fakeemail1@simulator.com",
+      "to": "fakeemail2@simulator.com",
+      "subject": "Test Email 1",
+      "body": "This is a test email from fakeemail1."
+    },
+    {
+      "id": 2,
+      "from": "fakeemail2@simulator.com",
+      "to": "fakeemail1@simulator.com",
+      "subject": "Test Email 2",
+      "body": "This is a test reply from fakeemail2."
+    }
+  ]
+  

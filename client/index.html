@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fake Email Simulator</title>
+</head>
+<body>
+  <h1>Fake Email Simulator</h1>
+
+  <h2>Send Email</h2>
+  <form id="emailForm">
+    <input type="text" id="from" placeholder="From" required><br>
+    <input type="text" id="to" placeholder="To" required><br>
+    <input type="text" id="subject" placeholder="Subject" required><br>
+    <textarea id="body" placeholder="Body" required></textarea><br>
+    <button type="submit">Send Email</button>
+  </form>
+
+  <h2>Received Emails</h2>
+  <div id="emailList">
+    <!-- Emails will be displayed here -->
+  </div>
+
+  <script>
+    document.getElementById('emailForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const from = document.getElementById('from').value;
+      const to = document.getElementById('to').value;
+      const subject = document.getElementById('subject').value;
+      const body = document.getElementById('body').value;
+
+      fetch('http://localhost:5000/api/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ from, to, subject, body }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Email sent:', data);
+        fetchEmails(); // Refresh the email list after sending
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+    });
+
+    function fetchEmails() {
+      fetch('http://localhost:5000/api/emails')
+        .then(response => response.json())
+        .then(data => {
+          const emailList = document.getElementById('emailList');
+          emailList.innerHTML = '';
+          data.forEach(email => {
+            const emailElement = document.createElement('div');
+            emailElement.innerHTML = `<p><strong>From:</strong> ${email.from}<br><strong>To:</strong> ${email.to}<br><strong>Subject:</strong> ${email.subject}<br><strong>Body:</strong> ${email.body}</p>`;
+            emailList.appendChild(emailElement);
+          });
+        })
+        .catch((error) => {
+          console.error('Error fetching emails:', error);
+        });
+    }
+
+    // Initial fetch to load emails
+    fetchEmails();
+  </script>
+</body>
+</html>
