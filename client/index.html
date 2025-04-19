@@ -1,139 +1,68 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fake Email Simulator</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background-color: #f4f4f4;
-    }
-    h1 {
-      color: #ff6347;  /* Tomato color */
-      text-align: center;
-    }
-    h2 {
-      color: #333;
-    }
-    form {
-      background-color: #fff;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      margin-bottom: 30px;
-    }
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button {
-      background-color: #28a745;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #218838;
-    }
-    #emailList div {
-      background-color: #fff;
-      padding: 15px;
-      margin: 10px 0;
-      border-radius: 8px;
-      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-    }
-    #emailList p {
-      margin: 5px 0;
-    }
-  </style>
-</head>
-<body>
-  <h1>Fake Email Simulator</h1>
-
-  <h2>Send Email</h2>
-  <form id="emailForm">
-    <input type="text" id="from" placeholder="From" required><br>
-    <input type="text" id="to" placeholder="To" required><br>
-    <input type="text" id="subject" placeholder="Subject" required><br>
-    <textarea id="body" placeholder="Body" required></textarea><br>
-    <button type="submit">Send Email</button>
-  </form>
-
-  <h2>Received Emails</h2>
-  <div id="emailList">
-    <!-- Emails will be displayed here -->
-  </div>
-
-  <script>
-    // Array to store received emails
-    const receivedEmails = [
-      {
-        from: "fakeemail1@simulator.com",
-        to: "fakeemail2@simulator.com",
-        subject: "Test Email 1",
-        body: "This is a test email from fakeemail1."
-      },
-      {
-        from: "fakeemail2@simulator.com",
-        to: "fakeemail1@simulator.com",
-        subject: "Test Email 2",
-        body: "This is a test reply from fakeemail2."
-      }
-    ];
-
-    // Function to display the received emails
-    function displayReceivedEmails() {
+<script>
+    // Function to fetch and display received emails from the server
+    async function fetchAndDisplayEmails() {
       const emailList = document.getElementById('emailList');
-      emailList.innerHTML = ''; // Clear the current list
-
-      if (receivedEmails.length === 0) {
-        emailList.innerHTML = '<p>No received emails yet.</p>';
-        return;
+      emailList.innerHTML = 'Loading emails...';
+  
+      try {
+        const response = await fetch('/api/emails');
+        if (!response.ok) throw new Error('Failed to fetch emails');
+        const data = await response.json();
+        const emails = data.emails || [];
+  
+        if (emails.length === 0) {
+          emailList.innerHTML = '<p>No received emails yet.</p>';
+          return;
+        }
+  
+        emailList.innerHTML = '';
+        emails.forEach(email => {
+          const emailElement = document.createElement('div');
+          emailElement.innerHTML = `
+            <p><strong>From:</strong> ${email.sender || email.from}<br>
+            <strong>To:</strong> ${email.recipient || email.to}<br>
+            <strong>Subject:</strong> ${email.subject}<br>
+            <strong>Body:</strong> ${email.message || email.body}</p>
+          `;
+          emailList.appendChild(emailElement);
+        });
+      } catch (error) {
+        emailList.innerHTML = `<p>Error loading emails: ${error.message}</p>`;
       }
-
-      receivedEmails.forEach(email => {
-        const emailElement = document.createElement('div');
-        emailElement.innerHTML = `
-          <p><strong>From:</strong> ${email.from}<br><strong>To:</strong> ${email.to}<br><strong>Subject:</strong> ${email.subject}<br><strong>Body:</strong> ${email.body}</p>
-        `;
-        emailList.appendChild(emailElement);
-      });
     }
-
-    // Call to display received emails when the page loads
-    window.onload = function() {
-      displayReceivedEmails();
-    }
-
+  
+    // Call to fetch and display emails when the page loads
+    window.onload = fetchAndDisplayEmails;
+  
     // Event listener for the email form submission
-    document.getElementById('emailForm').addEventListener('submit', function(e) {
+    document.getElementById('emailForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      
+  
       const from = document.getElementById('from').value;
       const to = document.getElementById('to').value;
       const subject = document.getElementById('subject').value;
       const body = document.getElementById('body').value;
-
-      // Simulate sending email (just add it to the receivedEmails array)
-      receivedEmails.push({ from, to, subject, body });
-
-      // Clear the form fields
-      document.getElementById('from').value = '';
-      document.getElementById('to').value = '';
-      document.getElementById('subject').value = '';
-      document.getElementById('body').value = '';
-
-      // Refresh the received emails display
-      displayReceivedEmails();
+  
+      try {
+        const response = await fetch('/api/emails', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sender: from, recipient: to, subject, message: body })
+        });
+  
+        if (!response.ok) throw new Error('Failed to send email');
+  
+        // Clear the form fields
+        document.getElementById('from').value = '';
+        document.getElementById('to').value = '';
+        document.getElementById('subject').value = '';
+        document.getElementById('body').value = '';
+  
+        // Refresh the received emails display
+        fetchAndDisplayEmails();
+      } catch (error) {
+        alert(`Error sending email: ${error.message}`);
+      }
     });
   </script>
-</body>
-</html>
+  
